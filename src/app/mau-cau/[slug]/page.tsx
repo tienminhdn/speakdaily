@@ -5,6 +5,9 @@ import { LevelBadge, PageHeader, SectionTitle } from "@/components/ui";
 import { RevealExamples } from "@/components/RevealExamples";
 import { MarkDone } from "@/components/MarkDone";
 
+// Static export: only the slugs listed below exist.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return patterns.map((p) => ({ slug: p.slug }));
 }

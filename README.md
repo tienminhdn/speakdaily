@@ -23,4 +23,5 @@ npm run dev                  # http://localhost:3000
 
 - Tiến độ học lưu trên trình duyệt (localStorage), không có máy chủ.
 - Chấm giọng nói dùng Web Speech API, chạy tốt nhất trên Chrome / Edge.
-- Analytics: Firebase (GA4), không gửi dữ liệu khi chạy ở `localhost`.
+- Analytics: Firebase (GA4), cấu hình ở `.env.production`; không gửi dữ liệu khi chạy ở `localhost`.
+- Deploy: mỗi lần push lên `main`, GitHub Actions (`.github/workflows/deploy.yml`) build bản tĩnh (`output: "export"`) và đưa lên GitHub Pages.

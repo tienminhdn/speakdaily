@@ -4,6 +4,9 @@ import { allChunks, getTopic, lessons, topics } from "@/data";
 import { LevelBadge, PageHeader } from "@/components/ui";
 import { ChunkList } from "@/components/ChunkList";
 
+// Static export: only the slugs listed below exist.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return topics.map((t) => ({ slug: t.slug }));
 }

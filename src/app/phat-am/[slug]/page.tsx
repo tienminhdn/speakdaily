@@ -8,6 +8,9 @@ import { SpeakButton } from "@/components/SpeakButton";
 import { SpeakCheck } from "@/components/SpeakCheck";
 import { MarkDone } from "@/components/MarkDone";
 
+// Static export: only the slugs listed below exist.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return pronunciation.map((p) => ({ slug: p.slug }));
 }

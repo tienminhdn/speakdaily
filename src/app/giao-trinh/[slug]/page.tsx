@@ -22,6 +22,9 @@ import { FreeSpeak } from "@/components/FreeSpeak";
 import { Reflex } from "@/components/Reflex";
 import { MilestoneTest } from "@/components/MilestoneTest";
 
+// Static export: only the slugs listed below exist.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return days.map((d) => ({ slug: d.slug }));
 }

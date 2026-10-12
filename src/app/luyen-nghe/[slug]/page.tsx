@@ -5,6 +5,9 @@ import { LevelBadge, PageHeader } from "@/components/ui";
 import { DialoguePlayer } from "@/components/DialoguePlayer";
 import { MarkDone } from "@/components/MarkDone";
 
+// Static export: only the slugs listed below exist.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return dialogues.map((d) => ({ slug: d.slug }));
 }

@@ -1,0 +1,35 @@
+# Firebase App Hosting configuration (single production backend).
+# https://firebase.google.com/docs/app-hosting/configure
+
+runConfig:
+  # Scale to zero when nobody is visiting, and cap instances to keep costs predictable.
+  minInstances: 0
+  maxInstances: 2
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+
+# Public Firebase web config (not secrets). NEXT_PUBLIC_* values are inlined by Next.js
+# at build time, so they must be available during BUILD as well as RUNTIME.
+env:
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyBDBI_Z1Ve4NS5UA9-rs9SNGAevCOpLKz0
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: learnenglish-ef4d6.firebaseapp.com
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: learnenglish-ef4d6
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: learnenglish-ef4d6.firebasestorage.app
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "1049211779118"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: 1:1049211779118:web:d0c661296a15db167e47bf
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    value: G-SH6CV5RV3J
+    availability: [BUILD, RUNTIME]

@@ -4,6 +4,7 @@ import { Be_Vietnam_Pro } from "next/font/google";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Ambient } from "@/components/Ambient";
 import { AnalyticsConsent } from "@/components/AnalyticsConsent";
+import { IOSBrowserHint } from "@/components/IOSBrowserHint";
 import "./globals.css";
 
 const font = Be_Vietnam_Pro({
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <AnalyticsConsent />
         <div className="shell mx-auto flex min-h-screen max-w-7xl flex-col sm:min-h-[calc(100vh-2rem)] lg:min-h-[calc(100vh-3rem)]">
           <SiteHeader />
+          <IOSBrowserHint />
           <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">{children}</main>
           <footer className="border-t border-line">
             <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-sm text-muted sm:flex-row sm:justify-between">

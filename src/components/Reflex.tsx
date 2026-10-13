@@ -7,7 +7,13 @@ import { isHardError, listen } from "@/lib/recognition";
 import { bestAttempt, MISS, PASS, type ScoreResult } from "@/lib/score";
 import { speak, stopSpeech } from "@/lib/speech";
 import { track } from "@/lib/analytics";
-import { MarkedSentence, ScoreBadge, useRecognitionProblem, useRecognitionSupported } from "./SpeakCheck";
+import {
+  MarkedSentence,
+  ScoreBadge,
+  useRecognitionProblem,
+  useRecognitionSupported,
+  useUnsupportedMessage,
+} from "./SpeakCheck";
 
 type Outcome = { prompt: Prompt; result: ScoreResult | null; self?: boolean; late: boolean };
 
@@ -40,6 +46,7 @@ export function Reflex({
   const { rate } = useProgress();
   const supported = useRecognitionSupported();
   const problem = useRecognitionProblem();
+  const unsupported = useUnsupportedMessage();
   const [count, setCount] = useState(defaultCount);
   const [seconds, setSeconds] = useState(defaultSeconds);
   const [queue, setQueue] = useState<Prompt[] | null>(null);
@@ -157,7 +164,9 @@ export function Reflex({
         <p className="mt-1 text-sm text-muted">
           Câu tiếng Việt hiện ra, bạn có vài giây để <b>bắt đầu nói</b> câu tiếng Anh. Không dịch từng chữ, hãy nói cả
           cụm.
-          {!supported && " (Trình duyệt này không chấm tự động, bạn sẽ tự chấm sau khi xem đáp án.)"}
+          {!supported && (problem || unsupported) && (
+            <span className="mt-2 block text-bad">⚠️ {problem ?? unsupported} Bạn sẽ tự chấm sau khi xem đáp án.</span>
+          )}
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">
           <label className="flex items-center gap-2">

@@ -9,6 +9,7 @@ import {
   recognitionBrokenReason,
   recognitionSupported,
   subscribeRecognition,
+  unsupportedMessage,
 } from "@/lib/recognition";
 import { bestAttempt, MISS, PASS, verdict, type ScoreResult } from "@/lib/score";
 import { speak, stopSpeech } from "@/lib/speech";
@@ -16,6 +17,12 @@ import { speak, stopSpeech } from "@/lib/speech";
 /** false on the server / during hydration, real value afterwards; turns false after a hard error. */
 export function useRecognitionSupported() {
   return useSyncExternalStore(subscribeRecognition, recognitionSupported, () => false);
+}
+
+const noop = () => () => {};
+/** Browser-specific "not supported" text; null on the server / during hydration. */
+export function useUnsupportedMessage() {
+  return useSyncExternalStore(noop, unsupportedMessage, () => null);
 }
 
 /** Why automatic scoring is off on this page (shown once near each fallback). */
@@ -77,6 +84,7 @@ export function SpeakCheck({
   const { rate } = useProgress();
   const supported = useRecognitionSupported();
   const problem = useRecognitionProblem();
+  const unsupported = useUnsupportedMessage();
   const [state, setState] = useState<"idle" | "listening" | "done">("idle");
   const [interim, setInterim] = useState("");
   const [result, setResult] = useState<ScoreResult | null>(null);
@@ -217,11 +225,9 @@ export function SpeakCheck({
           </button>
         )}
       </div>
-      {!supported && (problem || !compact) && (
+      {!supported && (problem || (!compact && unsupported)) && (
         <p className={`mt-2 text-xs ${problem ? "text-bad" : "text-muted"}`}>
-          {problem
-            ? `⚠️ ${problem} Tạm thời bạn tự chấm nhé.`
-            : "Trình duyệt này chưa hỗ trợ chấm giọng nói tự động. Hãy dùng Chrome hoặc Edge để được chấm điểm."}
+          {problem ? `⚠️ ${problem} Tạm thời bạn tự chấm nhé.` : unsupported}
         </p>
       )}
     </div>

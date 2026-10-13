@@ -71,12 +71,38 @@ export function recognitionSupported() {
 function browser() {
   const ua = typeof navigator === "undefined" ? "" : navigator.userAgent;
   const nav = typeof navigator === "undefined" ? {} : (navigator as unknown as Record<string, unknown>);
+  if (isIOS(ua)) return isIOSSafari(ua) ? "iOS" : "iOS-other";
   if (/coc_coc/i.test(ua)) return "Cốc Cốc";
   if (nav.brave) return "Brave";
   if (/OPR\//.test(ua)) return "Opera";
-  if (/CriOS|FxiOS|EdgiOS/.test(ua) || (/iPhone|iPad/.test(ua) && /Safari/.test(ua))) return "iOS";
   if (/Safari/.test(ua) && !/Chrome|Chromium|Edg/.test(ua)) return "Safari";
   return "";
+}
+
+function isIOS(ua: string) {
+  // iPadOS reports itself as a Mac; touch support gives it away.
+  return (
+    /iPhone|iPad|iPod/.test(ua) ||
+    (/Macintosh/.test(ua) && typeof navigator !== "undefined" && navigator.maxTouchPoints > 1)
+  );
+}
+
+function isIOSSafari(ua: string) {
+  return /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|OPT\/|coc_coc|GSA\/|FBAN|FBAV|Instagram|Line\/|Zalo/i.test(ua);
+}
+
+/** True for Chrome / Firefox / Edge / in-app browsers on iPhone & iPad, where Apple disables speech recognition. */
+export function isIOSNonSafari() {
+  return typeof navigator !== "undefined" && browser() === "iOS-other";
+}
+
+/** Why automatic scoring isn't available when the API is missing entirely. */
+export function unsupportedMessage() {
+  const b = browser();
+  if (b === "iOS-other")
+    return "Trên iPhone/iPad, chỉ Safari mới chấm được giọng nói (Apple tắt tính năng này ở Chrome và các trình duyệt khác). Hãy mở trang bằng Safari.";
+  if (b === "iOS") return "Safari trên máy này chưa hỗ trợ chấm giọng nói. Hãy cập nhật iOS và bật Đọc chính tả.";
+  return "Trình duyệt này chưa hỗ trợ chấm giọng nói tự động. Hãy dùng Chrome hoặc Edge để được chấm điểm.";
 }
 
 /** Vietnamese, actionable explanation of a recognition error. */
@@ -84,8 +110,12 @@ export function explainError(e: RecognitionError): string {
   const b = browser();
   switch (e) {
     case "not-allowed":
+      if (b === "iOS-other") return unsupportedMessage();
+      if (b === "iOS")
+        return "Safari đang chặn micro hoặc nhận diện giọng nói. Vào Cài đặt → Safari → Micrô → Cho phép, và Cài đặt → Siri → bật Siri & Đọc chính tả, rồi tải lại trang.";
       return "Micro đang bị chặn. Bấm biểu tượng 🔒 trên thanh địa chỉ → cho phép Micro → tải lại trang. Trên Mac, kiểm tra thêm Cài đặt hệ thống → Quyền riêng tư & Bảo mật → Micrô → bật cho trình duyệt.";
     case "service-not-allowed":
+      if (b === "iOS-other") return unsupportedMessage();
       return b === "Safari" || b === "iOS"
         ? "Safari cần bật Đọc chính tả. iPhone/iPad: Cài đặt → Cài đặt chung → Bàn phím → bật Đọc chính tả. Mac: Cài đặt hệ thống → Bàn phím → Đọc chính tả. Sau đó tải lại trang."
         : "Trình duyệt này không cho dùng dịch vụ nhận diện giọng nói. Hãy mở trang bằng Chrome hoặc Edge.";
@@ -98,8 +128,8 @@ export function explainError(e: RecognitionError): string {
     case "language-not-supported":
       return "Trình duyệt này không nhận diện được tiếng Anh. Hãy dùng Chrome hoặc Edge.";
     case "start-failed":
-      return b === "iOS"
-        ? "Trình duyệt trên iPhone này không mở được nhận diện giọng nói. Hãy dùng Safari (và bật Đọc chính tả)."
+      return b === "iOS-other" || b === "iOS"
+        ? unsupportedMessage()
         : "Không khởi động được nhận diện giọng nói trên trình duyệt này. Hãy dùng Chrome hoặc Edge.";
     case "no-speech":
       return "Không nghe thấy gì. Hãy nói to, rõ hơn và thử lại.";

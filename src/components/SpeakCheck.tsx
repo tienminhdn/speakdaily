@@ -137,7 +137,7 @@ export function SpeakCheck({
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-bad opacity-75" />
             <span className="relative inline-flex h-3 w-3 rounded-full bg-bad" />
           </span>
-          <span className="text-muted">{interim || "Đang nghe… hãy nói"}</span>
+          <span className="text-muted">{interim || "Đang nghe… nói xong ngừng 1–2 giây là máy tự chấm"}</span>
         </p>
       )}
 

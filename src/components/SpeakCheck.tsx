@@ -2,14 +2,26 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { addMistake, markGoodAttempt, recordSpeaking, useProgress } from "@/lib/progress";
-import { listen, recognitionSupported } from "@/lib/recognition";
+import {
+  explainError,
+  isHardError,
+  listen,
+  recognitionBrokenReason,
+  recognitionSupported,
+  subscribeRecognition,
+} from "@/lib/recognition";
 import { bestAttempt, MISS, PASS, verdict, type ScoreResult } from "@/lib/score";
 import { speak, stopSpeech } from "@/lib/speech";
 
-const noop = () => () => {};
-/** false on the server / during hydration, real value afterwards. */
+/** false on the server / during hydration, real value afterwards; turns false after a hard error. */
 export function useRecognitionSupported() {
-  return useSyncExternalStore(noop, recognitionSupported, () => false);
+  return useSyncExternalStore(subscribeRecognition, recognitionSupported, () => false);
+}
+
+/** Why automatic scoring is off on this page (shown once near each fallback). */
+export function useRecognitionProblem() {
+  const reason = useSyncExternalStore(subscribeRecognition, recognitionBrokenReason, () => null);
+  return reason ? explainError(reason) : null;
 }
 
 const TONE = {
@@ -64,6 +76,7 @@ export function SpeakCheck({
 }) {
   const { rate } = useProgress();
   const supported = useRecognitionSupported();
+  const problem = useRecognitionProblem();
   const [state, setState] = useState<"idle" | "listening" | "done">("idle");
   const [interim, setInterim] = useState("");
   const [result, setResult] = useState<ScoreResult | null>(null);
@@ -83,13 +96,9 @@ export function SpeakCheck({
     handle.current = listen({ maxMs: Math.max(5000, words * 900 + 3000), onInterim: setInterim });
     const { alternatives, error: err } = await handle.current.promise;
     handle.current = null;
-    if (err === "not-allowed") {
-      setError("Chưa có quyền dùng micro. Hãy bấm biểu tượng 🔒 trên thanh địa chỉ và cho phép Micro.");
-      setState("idle");
-      return;
-    }
     if (!alternatives.length) {
-      setError("Không nghe thấy gì. Hãy nói to, rõ hơn và thử lại.");
+      // Hard errors switch every speak-check to self-rating; the reason is shown below.
+      if (!isHardError(err)) setError(explainError(err ?? "no-speech"));
       setState("idle");
       return;
     }
@@ -208,9 +217,11 @@ export function SpeakCheck({
           </button>
         )}
       </div>
-      {!supported && !compact && (
-        <p className="mt-2 text-xs text-muted">
-          Trình duyệt này chưa hỗ trợ chấm giọng nói tự động. Hãy dùng Chrome hoặc Edge để được chấm điểm.
+      {!supported && (problem || !compact) && (
+        <p className={`mt-2 text-xs ${problem ? "text-bad" : "text-muted"}`}>
+          {problem
+            ? `⚠️ ${problem} Tạm thời bạn tự chấm nhé.`
+            : "Trình duyệt này chưa hỗ trợ chấm giọng nói tự động. Hãy dùng Chrome hoặc Edge để được chấm điểm."}
         </p>
       )}
     </div>

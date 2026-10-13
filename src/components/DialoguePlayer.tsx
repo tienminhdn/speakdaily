@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import type { Dialogue } from "@/data";
 import { addMistake, markGoodAttempt, recordSpeaking, setSetting, useProgress } from "@/lib/progress";
-import { listen, recognitionSupported } from "@/lib/recognition";
+import { isHardError, listen, recognitionSupported } from "@/lib/recognition";
 import { bestAttempt, MISS, PASS, type ScoreResult } from "@/lib/score";
 import { speak, stopSpeech } from "@/lib/speech";
-import { MarkedSentence, ScoreBadge } from "./SpeakCheck";
+import { MarkedSentence, ScoreBadge, useRecognitionProblem } from "./SpeakCheck";
 
 type Role = "none" | "A" | "B";
 
@@ -14,6 +14,7 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export function DialoguePlayer({ dialogue }: { dialogue: Dialogue }) {
   const { rate } = useProgress();
+  const problem = useRecognitionProblem();
   const [current, setCurrent] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
   const [showEn, setShowEn] = useState(true);
@@ -45,9 +46,14 @@ export function DialoguePlayer({ dialogue }: { dialogue: Dialogue }) {
         // Learner's turn: listen and score what they say.
         setInterim("");
         listening.current = listen({ maxMs: line.en.split(" ").length * 800 + 4000, onInterim: setInterim });
-        const { alternatives } = await listening.current.promise;
+        const { alternatives, error } = await listening.current.promise;
         listening.current = null;
         if (runRef.current !== run) return;
+        if (isHardError(error)) {
+          // Scoring unavailable on this browser: just give time to say the line.
+          await wait(line.en.split(" ").length * 500 + 1800);
+          continue;
+        }
         const r = bestAttempt(line.en, alternatives);
         setScores((sc) => ({ ...sc, [i]: r }));
         recordSpeaking(r.score >= PASS, r.score);
@@ -140,6 +146,11 @@ export function DialoguePlayer({ dialogue }: { dialogue: Dialogue }) {
           <p className="rounded-lg bg-accent-soft px-3 py-2 text-sm text-accent">
             Câu của bạn sẽ bị che. Khi đến lượt, hãy <b>nói to</b> câu đó bằng tiếng Anh. Máy nghe và chấm (trên
             Chrome/Edge), rồi đọc tiếp phần của {dialogue.speakers[role === "A" ? "B" : "A"]}.
+          </p>
+        )}
+        {role !== "none" && problem && (
+          <p className="rounded-lg bg-bad-soft px-3 py-2 text-sm text-bad">
+            ⚠️ {problem} Máy sẽ chờ bạn nói rồi đọc tiếp, nhưng không chấm điểm.
           </p>
         )}
       </div>

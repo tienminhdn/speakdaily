@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import type { Prompt } from "@/data";
 import { addMistake, markGoodAttempt, recordSpeaking, useProgress } from "@/lib/progress";
-import { listen } from "@/lib/recognition";
+import { isHardError, listen } from "@/lib/recognition";
 import { bestAttempt, MISS, PASS, type ScoreResult } from "@/lib/score";
 import { speak, stopSpeech } from "@/lib/speech";
 import { track } from "@/lib/analytics";
-import { MarkedSentence, ScoreBadge, useRecognitionSupported } from "./SpeakCheck";
+import { MarkedSentence, ScoreBadge, useRecognitionProblem, useRecognitionSupported } from "./SpeakCheck";
 
 type Outcome = { prompt: Prompt; result: ScoreResult | null; self?: boolean; late: boolean };
 
@@ -39,6 +39,7 @@ export function Reflex({
 }) {
   const { rate } = useProgress();
   const supported = useRecognitionSupported();
+  const problem = useRecognitionProblem();
   const [count, setCount] = useState(defaultCount);
   const [seconds, setSeconds] = useState(defaultSeconds);
   const [queue, setQueue] = useState<Prompt[] | null>(null);
@@ -106,8 +107,13 @@ export function Reflex({
         setInterim(t);
       },
     });
-    const { alternatives } = await handle.current.promise;
+    const { alternatives, error } = await handle.current.promise;
     clearInterval(timer.current);
+    if (isHardError(error)) {
+      // Recognition can't work here: let the learner self-rate this prompt instead.
+      setPhase("result");
+      return;
+    }
     const late = !heard.current;
     const result = bestAttempt(p.en, alternatives);
     recordSpeaking(result.score >= PASS, result.score);
@@ -250,6 +256,9 @@ export function Reflex({
         <div className="h-full bg-brand transition-all" style={{ width: `${(index / queue.length) * 100}%` }} />
       </div>
 
+      {problem && (
+        <p className="mb-3 rounded-lg bg-bad-soft p-3 text-sm text-bad">⚠️ {problem} Tạm thời bạn tự chấm nhé.</p>
+      )}
       <p className="text-xs font-bold uppercase tracking-wide text-accent">{prompt!.source}</p>
       <p className="mt-1 text-2xl font-bold">{prompt!.vi}</p>
 

@@ -154,7 +154,7 @@ let active: { finish: () => void } | null = null;
  * ends on its own after a pause in speech, and `stop()` force-finishes after a short grace
  * period using whatever was heard, including interim text.
  */
-export function listen(opts: { maxMs?: number; onInterim?: (text: string) => void } = {}) {
+export function listen(opts: { maxMs?: number; silenceMs?: number; onInterim?: (text: string) => void } = {}) {
   const Ctor = ctor();
   let finish: () => void = () => {};
   let requestStop: () => void = () => {};
@@ -229,7 +229,7 @@ export function listen(opts: { maxMs?: number; onInterim?: (text: string) => voi
       opts.onInterim?.(`${sofar} ${interim}`.trim());
       // Auto-finish once the learner pauses, so pressing "Dừng" is optional.
       clearTimeout(silenceTimer);
-      silenceTimer = setTimeout(requestStop, SILENCE_MS);
+      silenceTimer = setTimeout(requestStop, opts.silenceMs ?? SILENCE_MS);
     };
     r.onerror = (e) => {
       // Keep the first meaningful error; "aborted" is just us cancelling.

@@ -39,7 +39,16 @@ export type Progress = {
   milestones: Record<string, MilestoneResult[]>;
   /** Number of speaking attempts per local date, for stats. */
   speaking: Record<string, number>;
+  /** "10 Chủ đề": per-word memory state, keyed by ThemeWord.id. */
+  words: Record<string, WordState>;
+  /** "10 Chủ đề": completed step ids per lesson slug. */
+  themeSteps: Record<string, string[]>;
+  /** "10 Chủ đề": best end-of-lesson test score (0–1) per lesson slug. */
+  themeTests: Record<string, number>;
 };
+
+/** lvl 0–5 (≥ 3 counts as "remembered"); `used` = times the learner used the word in their own speech. */
+export type WordState = { lvl: number; due: number; used: number };
 
 const KEY = "engdaily-progress-v1";
 
@@ -57,9 +66,28 @@ export const EMPTY: Progress = {
   mistakes: {},
   milestones: {},
   speaking: {},
+  words: {},
+  themeSteps: {},
+  themeTests: {},
 };
 
-export const XP = { chunk: 1, pattern: 3, dialogue: 3, lesson: 5, quizCorrect: 1, review: 1, speak: 1, milestone: 10 };
+export const XP = {
+  chunk: 1,
+  pattern: 3,
+  dialogue: 3,
+  lesson: 5,
+  quizCorrect: 1,
+  review: 1,
+  speak: 1,
+  milestone: 10,
+  wordUsed: 2,
+  themeStep: 3,
+  themeTest: 10,
+};
+
+/** Days until the next review for each word level (0–5). */
+export const WORD_DAYS = [0, 1, 2, 4, 8, 16];
+export const REMEMBERED = 3;
 
 export const FIXED_STREAK = 2;
 
@@ -258,4 +286,56 @@ export function recordMilestone(id: string, r: Omit<MilestoneResult, "at">) {
   const pct = (x: number) => Math.round(x * 100);
   track("milestone_done", { id, listening: pct(r.listening), speaking: pct(r.speaking), self: pct(r.self) });
   save(withXp({ ...p, milestones: { ...p.milestones, [id]: list } }, XP.milestone));
+}
+
+/* ---------- "10 Chủ đề" ---------- */
+
+export function wordState(p: Progress, id: string): WordState {
+  return p.words[id] ?? { lvl: 0, due: 0, used: 0 };
+}
+
+/** Records a recall attempt for one or more words: correct → level up, wrong → level down. */
+export function rateWords(results: { id: string; correct: boolean }[]) {
+  if (!results.length) return;
+  const p = load();
+  const words = { ...p.words };
+  let xp = 0;
+  for (const { id, correct } of results) {
+    const cur = words[id] ?? { lvl: 0, due: 0, used: 0 };
+    const lvl = correct ? Math.min(5, cur.lvl + 1) : Math.max(0, cur.lvl - 1);
+    // Wrong answers come back within the hour; right ones wait longer each level.
+    const due = Date.now() + (correct ? WORD_DAYS[lvl] * DAY : 60 * 60 * 1000);
+    words[id] = { ...cur, lvl, due };
+    if (correct) xp += XP.review;
+  }
+  save(withXp({ ...p, words }, xp));
+}
+
+/** The learner used these words in their own answer: counts usage and nudges memory up. */
+export function markWordsUsed(ids: string[]) {
+  if (!ids.length) return;
+  const p = load();
+  const words = { ...p.words };
+  for (const id of ids) {
+    const cur = words[id] ?? { lvl: 0, due: 0, used: 0 };
+    const lvl = Math.min(5, Math.max(cur.lvl, REMEMBERED - 1) + 1);
+    words[id] = { lvl, used: cur.used + 1, due: Date.now() + WORD_DAYS[lvl] * DAY };
+  }
+  track("words_used", { count: ids.length });
+  save(withXp({ ...p, words }, ids.length * XP.wordUsed));
+}
+
+export function completeThemeStep(slug: string, step: string) {
+  const p = load();
+  const done = p.themeSteps[slug] ?? [];
+  if (done.includes(step)) return;
+  track("theme_step", { lesson: slug, step });
+  save(withXp({ ...p, themeSteps: { ...p.themeSteps, [slug]: [...done, step] } }, XP.themeStep));
+}
+
+export function recordThemeTest(slug: string, score: number) {
+  const p = load();
+  const best = Math.max(p.themeTests[slug] ?? 0, score);
+  track("theme_test", { lesson: slug, score: Math.round(score * 100) });
+  save(withXp({ ...p, themeTests: { ...p.themeTests, [slug]: best } }, XP.themeTest));
 }

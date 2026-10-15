@@ -7,6 +7,7 @@ import { RoadmapGrid } from "@/components/LessonStatus";
 
 const SECTIONS = [
   { href: "/giao-trinh", icon: "📘", title: "Giáo trình", desc: "Lộ trình 30 ngày, 4 tuần, 5 bài kiểm tra mốc" },
+  { href: "/chu-de", icon: "🗃️", title: "10 Chủ đề", desc: "240 từ theo chủ đề: nhớ từ và dùng từ" },
   {
     href: "/tu-vung",
     icon: "🧩",
@@ -22,7 +23,6 @@ const SECTIONS = [
     desc: `${dialogues.length} hội thoại, đóng vai có chấm điểm`,
   },
   { href: "/luyen-noi", icon: "🎤", title: "Luyện nói", desc: "Phản xạ Việt → Anh, máy chấm từng từ" },
-  { href: "/luyen-de", icon: "📝", title: "Luyện đề", desc: "Trắc nghiệm, nghe chọn đáp án" },
   { href: "/on-tap", icon: "🗂️", title: "Ôn tập", desc: "Flashcard + Sổ tay lỗi" },
 ];
 

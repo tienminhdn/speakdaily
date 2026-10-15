@@ -83,3 +83,54 @@ export type Day = {
 
 /** @deprecated kept as alias while pages migrate to the 30-day roadmap */
 export type Lesson = Day;
+
+/* ---------- "10 Chủ đề" programme ---------- */
+
+export type ThemeWord = {
+  /** Unique id, e.g. "family-cousin". */
+  id: string;
+  en: string;
+  vi: string;
+  pos: "n" | "v" | "adj" | "adv" | "phr";
+  /** 1 = cơ bản, 2 = mở rộng, 3 = nâng cao (still useful in conversation). */
+  tier: 1 | 2 | 3;
+  /** Short Vietnamese-friendly pronunciation hint, e.g. "KAZ-ừn". */
+  hint: string;
+  /** A natural collocation / chunk using the word. */
+  chunk: string;
+  chunkVi: string;
+  ex: string;
+  exVi: string;
+  /** The exact form of the word as it appears in `ex` (for fill-in-the-blank). */
+  form: string;
+};
+
+export type ThemeLesson = {
+  slug: string;
+  number: number;
+  icon: string;
+  title: string;
+  titleEn: string;
+  /** 1–2 sentences: what you can talk about after this lesson. */
+  intro: string;
+  /** 3 can-do goals. */
+  goals: string[];
+  words: ThemeWord[];
+  grammar: {
+    title: string;
+    structure: string;
+    explain: string;
+    examples: { en: string; vi: string }[];
+    mistakes: { wrong: string; right: string; note: string }[];
+  };
+  /** Vietnamese → English speaking drills mixing the lesson's words and grammar. */
+  drills: { vi: string; en: string }[];
+  /** Personal questions; `targets` are word ids the learner should try to use. */
+  talk: { q: string; qVi: string; sample: string; targets: string[] }[];
+  dialogue: {
+    title: string;
+    situation: string;
+    speakers: { A: string; B: string };
+    lines: DialogueLine[];
+  };
+};

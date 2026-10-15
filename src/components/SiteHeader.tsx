@@ -8,6 +8,7 @@ import { useNow } from "@/lib/time";
 
 export const NAV = [
   { href: "/giao-trinh", label: "Giáo trình" },
+  { href: "/chu-de", label: "10 Chủ đề" },
   { href: "/tu-vung", label: "Từ vựng" },
   { href: "/mau-cau", label: "Mẫu câu" },
   { href: "/phat-am", label: "Phát âm" },

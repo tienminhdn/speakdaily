@@ -24,8 +24,7 @@ for (const l of lessons) {
       if (!w[k]?.trim()) err(`${w.id}: empty ${k}`);
     if (w.ex.split(/\s+/).length > 14) err(`${w.id}: ex longer than 14 words`);
   }
-  if (l.words.length !== 24) err(`${l.slug}: expected 24 words, got ${l.words.length}`);
-  if (tiers.join() !== "10,8,6") err(`${l.slug}: tiers should be 10/8/6, got ${tiers.join("/")}`);
+  if (l.words.length < 24) err(`${l.slug}: expected at least 24 words, got ${l.words.length}`);
   if (l.goals.length !== 3) err(`${l.slug}: goals should be 3`);
   if (l.grammar.examples.length !== 5) err(`${l.slug}: grammar.examples should be 5`);
   if (l.grammar.mistakes.length !== 3) err(`${l.slug}: grammar.mistakes should be 3`);

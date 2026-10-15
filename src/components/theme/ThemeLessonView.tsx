@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { THEME_STEPS, type ThemeStepId } from "@/data/themes";
+import { THEME_STEPS, WORD_SETS, wordsOf, type ThemeStepId, type WordSet } from "@/data/themes";
 import type { Dialogue, ThemeLesson } from "@/data";
 import { completeThemeStep, recordThemeTest, REMEMBERED, useProgress, wordState } from "@/lib/progress";
 import { DialoguePlayer } from "../DialoguePlayer";
@@ -52,6 +52,24 @@ export function ThemeLessonView({
   const [step, setStep] = useState<ThemeStepId>("learn");
   const [memoTab, setMemoTab] = useState<"cards" | "match" | "dictation">("cards");
   const stats = useThemeStats(lesson);
+  const hasCourse = lesson.words.some((w) => w.fromCourse);
+  const [set, setSet] = useState<WordSet>(hasCourse ? "course" : "chunks");
+  const practice = wordsOf(lesson, set);
+  const setPicker = hasCourse ? (
+    <div className="flex flex-wrap items-center gap-2 text-sm">
+      <span className="text-muted">Luyện nhóm từ:</span>
+      {WORD_SETS.map((ws) => (
+        <button
+          key={ws.id}
+          type="button"
+          onClick={() => setSet(ws.id)}
+          className={`btn px-3 py-1.5 text-xs ${set === ws.id ? "btn-primary" : "btn-ghost"}`}
+        >
+          {ws.label} ({wordsOf(lesson, ws.id).length})
+        </button>
+      ))}
+    </div>
+  ) : null;
   const n = lesson.words.length;
   const idx = THEME_STEPS.findIndex((s) => s.id === step);
   const complete = (id: ThemeStepId) => completeThemeStep(lesson.slug, id);
@@ -142,9 +160,10 @@ export function ThemeLessonView({
                 </button>
               ))}
             </div>
-            {memoTab === "cards" && <WordReview words={lesson.words} onFinish={() => complete("memorize")} />}
-            {memoTab === "match" && <MatchGame words={lesson.words} onFinish={() => complete("memorize")} />}
-            {memoTab === "dictation" && <Dictation words={lesson.words} onFinish={() => complete("memorize")} />}
+            {setPicker}
+            {memoTab === "cards" && <WordReview key={set} words={practice} onFinish={() => complete("memorize")} />}
+            {memoTab === "match" && <MatchGame key={set} words={practice} onFinish={() => complete("memorize")} />}
+            {memoTab === "dictation" && <Dictation key={set} words={practice} onFinish={() => complete("memorize")} />}
           </section>
         )}
 
@@ -166,8 +185,10 @@ export function ThemeLessonView({
 
         {step === "use" && (
           <section className="space-y-6">
+            {setPicker}
             <WordQuiz
-              words={lesson.words}
+              key={set}
+              words={practice}
               kinds={["cloze", "chunk"]}
               count={10}
               title="✍️ Điền từ & ghép cụm"
@@ -240,8 +261,10 @@ export function ThemeLessonView({
 
         {step === "test" && (
           <section className="space-y-4">
+            {setPicker}
             <WordQuiz
-              words={lesson.words}
+              key={set}
+              words={practice}
               kinds={["recall", "cloze", "listen", "meaning", "chunk"]}
               count={15}
               passMark={PASS}

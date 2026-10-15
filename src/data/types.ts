@@ -103,6 +103,8 @@ export type ThemeWord = {
   exVi: string;
   /** The exact form of the word as it appears in `ex` (for fill-in-the-blank). */
   form: string;
+  /** Part of the course's vocabulary table (shown as "Từ vựng giáo trình"); otherwise a conversation chunk. */
+  fromCourse?: boolean;
 };
 
 export type ThemeLesson = {

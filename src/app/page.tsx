@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
+import { totalThemeWords } from "@/data/themes";
 import { allChunks, dialogues, patterns, pronunciation, topics } from "@/data";
 import { ContinueCard, DailyChunk } from "@/components/HomeWidgets";
 import { HeroBanner } from "@/components/HeroBanner";
@@ -7,7 +8,7 @@ import { RoadmapGrid } from "@/components/LessonStatus";
 
 const SECTIONS = [
   { href: "/giao-trinh", icon: "📘", title: "Giáo trình", desc: "Lộ trình 30 ngày, 4 tuần, 5 bài kiểm tra mốc" },
-  { href: "/chu-de", icon: "🗃️", title: "10 Chủ đề", desc: "240 từ theo chủ đề: nhớ từ và dùng từ" },
+  { href: "/chu-de", icon: "🗃️", title: "10 Chủ đề", desc: `${totalThemeWords()} từ theo chủ đề: nhớ từ và dùng từ` },
   {
     href: "/tu-vung",
     icon: "🧩",

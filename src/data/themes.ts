@@ -1,9 +1,39 @@
 import { themesA } from "./themes-a";
 import { themesB } from "./themes-b";
 import { themesC } from "./themes-c";
+import family from "./course-words/family";
+import school from "./course-words/school";
+import shopping from "./course-words/shopping";
+import travel from "./course-words/travel";
+import weather from "./course-words/weather";
+import clothing from "./course-words/clothing";
+import animals from "./course-words/animals";
+import emotions from "./course-words/emotions";
+import headwords from "./course-words/headwords";
 import type { Dialogue, Level, ThemeLesson, ThemeWord } from "./types";
 
-export const themes: ThemeLesson[] = [...themesA, ...themesB, ...themesC].sort((a, b) => a.number - b.number);
+/** Course vocabulary per lesson (Bài 3 and 4 have no vocabulary table in the course). */
+const courseWords: Record<string, ThemeWord[]> = {
+  family,
+  school,
+  shopping,
+  travel,
+  weather,
+  clothing,
+  animals,
+  emotions,
+};
+
+const TIER_ORDER = (w: ThemeWord) => (w.fromCourse ? 0 : 10) + w.tier;
+
+export const themes: ThemeLesson[] = [...themesA, ...themesB, ...themesC]
+  .map((t) => ({
+    ...t,
+    words: [...t.words, ...(courseWords[t.slug] ?? []), ...(headwords[t.slug] ?? [])].sort(
+      (a, b) => TIER_ORDER(a) - TIER_ORDER(b),
+    ),
+  }))
+  .sort((a, b) => a.number - b.number);
 
 export const getTheme = (slug: string) => themes.find((t) => t.slug === slug);
 
@@ -18,6 +48,23 @@ export function themeLevel(t: ThemeLesson): Level {
 }
 
 export const TIER_LABEL: Record<1 | 2 | 3, string> = { 1: "Cơ bản", 2: "Mở rộng", 3: "Nâng cao" };
+/** The course's own level names for its vocabulary table. */
+export const COURSE_TIER_LABEL: Record<1 | 2 | 3, string> = { 1: "Cơ bản", 2: "Trung cấp", 3: "Nâng cao" };
+
+export type WordSet = "course" | "chunks" | "all";
+export const WORD_SETS: { id: WordSet; label: string }[] = [
+  { id: "course", label: "📚 Từ vựng giáo trình" },
+  { id: "chunks", label: "💬 Cụm từ giao tiếp" },
+  { id: "all", label: "Tất cả" },
+];
+
+export function wordsOf(t: ThemeLesson, set: WordSet): ThemeWord[] {
+  if (set === "course") return t.words.filter((w) => w.fromCourse);
+  if (set === "chunks") return t.words.filter((w) => !w.fromCourse);
+  return t.words;
+}
+
+export const totalThemeWords = () => themes.reduce((n, t) => n + t.words.length, 0);
 
 /** Adapts a lesson's dialogue to the shared DialoguePlayer shape. */
 export function themeDialogue(t: ThemeLesson): Dialogue {
